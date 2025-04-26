@@ -1,0 +1,283 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+	entity fsm is
+	port ( ) ; --incomplete
+	end must;
+	
+	
+	
+architecture bhv of must is
+	type state is (s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,s17,s18,s19); 
+	signal y_present,y_next: state:=s0;
+begin
+
+
+
+	clock_proc:process(clock,reset)
+   begin
+		if(clock='1' and clock' event) then
+			if(reset='1') then
+				y_present<=s0;
+			else
+				y_present<=y_next;
+			end if;
+		end if;
+	end process;
+	
+	
+	state_transition_proc:process(y_present,x)
+	begin
+	case y_present is
+	
+	 when S0 =>
+	   if (x="0000" or x="0010" or x="0011" or x="0100" or "0101" or "0110") then --addsub
+			y_next<=s1;
+		elsif (x="0001") then --adi
+			y_next<=s4;
+		elsif (x="1001") then --lli
+			y_next<=s7;
+		elsif (x="1000") then --lhi
+			y_next<=s8;
+		elsif (x="1010") then --lw
+			y_next<=s10;
+		elsif (x="1011") then --sw
+			y_next<=s10;
+		elsif (x="1100") then --beq
+			y_next<=s13;
+		elsif (x="1110") then --j
+			y_next<=s16;
+		elsif (x="1101") then --jal
+			y_next<=s16;
+		elsif (x="1111") then --jlr
+			y_next<=s19;
+		end if;
+		
+	 when s1 =>
+	    y_next<=s2;
+		 
+	 when s2 =>
+	    y_next<=s3;
+		 
+	 when s3 =>
+	    y_next<=s0;
+		 
+	 when s4 =>
+	    y_next<=s5;
+		 
+	 when s5 =>
+	   if(x="0001") then
+			y_next<=s6;
+		elsif(x="1010") then
+			y_next<=s11;
+		elsif(x="1011") then
+			y_next<=s12;
+		end if;
+		 
+	 when s6 =>
+	    y_next<=s0;
+		 
+	 when s7 =>
+	    y_next<=s0;		 
+		 
+	 when s8 =>
+	    y_next<=s9;		 
+		 
+	 when s9 =>
+	    y_next<=s0;
+		 
+	 when s10 =>
+	    y_next<=s5;
+
+	 when s11 =>
+	    y_next<=s9;		 
+		 
+	 when s12 =>
+	    y_next<=s0;
+
+	 when s13 =>
+	    y_next<=s14;
+
+	 when s14 =>
+		if(z='1') then
+			y_next<=s15;
+		elsif(z='0') then
+			y_next<=s0;
+		end if;
+
+	 when s15 =>
+	    y_next<=s0;
+
+	 when s16 => -- left
+	   if(x="1110") then
+			y_next<=s17;
+		elsif(x="1101") then
+			y_next<=s18;
+		end if;
+
+	 when s17 =>
+	    y_next<=s0;
+
+	 when s18 =>
+	    y_next<=s0;
+
+	 when s19 =>
+	    y_next<=s0;
+
+	end case;
+	end process;
+	
+	
+	
+	
+	
+output_proc: process(y_present)
+begin
+    case y_present is
+
+        when S0 =>
+            mem_rd <= '1';
+            ir_en <= '1';
+            alu_ctrl <= "000";
+            pc_en <= '1';
+            w6 <= '1';
+            w7 <= '1';
+            w8 <= '1';
+            w9 <= '1';
+
+        when S1 =>
+            t1_enable <= '1';
+            t2_enable <= '1';
+            w1 <= '1';
+            w2 <= '1';
+            w10 <= '1';
+
+        when S2 =>
+            t1_enable <= '1';
+            w7 <= '1';
+            w8 <= '1';
+            w2 <= '1';
+            alu_ctrl <= IR[14:12];  -- Add the specific ALU control value
+
+        when S3 =>
+            rf_enable <= '1';
+            w4 <= '1';
+            w12 <= '1';
+
+        when S4 =>
+            t1_enable <= '1';
+            t2_enable <= '1';
+            w13 <= '1';
+
+        when S5 =>
+            t1_enable <= '1';
+            t2_enable <= '1';
+            alu_ctrl <= "000";  -- Add ALU control value
+            w7 <= '1';
+            w8 <= '1';
+            w2 <= '1';
+
+        when S6 =>
+            rf_enable <= '1';
+            w4 <= '1';
+            w11 <= '1';
+
+        when S7 =>
+            rf_enable <= '1';
+            w5 <= '1';
+            w11 <= '1';
+            w12 <= '1';
+
+        when S8 =>
+            t1_enable <= '1';
+            alu_ctrl <= "000";  -- Add ALU control value
+            w2 <= '1';
+            w6 <= '1';
+            w9 <= '1';
+
+        when S9 =>
+            rf_enable <= '1';
+            w4 <= '1';
+            w11 <= '1';
+            w12 <= '1';
+
+        when S10 =>
+            t1_enable <= '1';
+            t2_enable <= '1';
+            w10 <= '1';
+            w13 <= '1';
+
+        when S11 =>
+            mem_rd <= '1';
+            t1_enable <= '1';
+            w0 <= '1';
+            w1 <= '1';
+
+        when S12 =>
+            memory_write <= '1';
+            w0 <= '1';
+
+        when S13 =>
+            t1_enable <= '1';
+            t2_enable <= '1';
+            w1 <= '1';
+            w2 <= '1';
+            w6 <= '1';
+            w7 <= '1';
+            w8 <= '1';
+            w9 <= '1';
+            alu_ctrl <= "000";  -- Add ALU control value
+
+        when S14 =>
+            w7 <= '1';
+            w8 <= '1';
+            alu_ctrl <= "000";  -- Add ALU control value
+
+        when S15 =>
+            pc_en <= '1';
+            w6 <= '1';
+            w7 <= '1';
+            w9 <= '1';
+            w13 <= '1';
+            alu_ctrl <= "000";  -- Add ALU control value
+
+        when S16 =>
+            pc_en <= '1';
+            w6 <= '1';
+            w7 <= '1';
+            w8 <= '1';
+            w9 <= '1';
+            alu_ctrl <= "010";  -- Add ALU control value
+
+        when S17 =>
+            pc_en <= '1';
+            w6 <= '1';
+            w7 <= '1';
+            w9 <= '1';
+            alu_ctrl <= "000";  -- Add ALU control value
+
+        when S18 =>
+            rf_enable <= '1';
+            pc_en <= '1';
+            w4 <= '1';
+            w5 <= '1';
+            w6 <= '1';
+            w7 <= '1';
+            w9 <= '1';
+            w11 <= '1';
+            w12 <= '1';
+            alu_ctrl <= "000";  -- Add ALU control value
+
+        when S19 =>
+            rf_enable <= '1';
+            w4 <= '1';
+            w5 <= '1';
+            w11 <= '1';
+            w12 <= '1';
+            w3 <= '1';
+
+    end case;
+end process;
+
+end bhv;

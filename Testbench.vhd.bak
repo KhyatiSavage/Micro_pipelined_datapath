@@ -1,0 +1,134 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity Testbench is
+end entity Testbench;
+
+architecture bhv of Testbench is
+    -- Component declaration for the memory module
+    component memory is
+        port (
+            mem_addr, mem_data_in, mem_data_init : in std_logic_vector(15 downto 0);
+            mem_data_out : out std_logic_vector(15 downto 0);
+            mem_read, mem_write, mem_clk, rst, init : in std_logic
+        );
+    end component memory;
+
+    -- Signals to connect to the DUT
+    signal mem_addr_t, mem_data_in_t, mem_data_init_t : std_logic_vector(15 downto 0) := (others => '0');
+    signal mem_data_out_t : std_logic_vector(15 downto 0);
+    signal mem_read_t, mem_write_t, mem_clk_t, rst_t, init_t : std_logic := '0';
+
+begin
+    -- Instantiate the memory module
+    DUT : memory
+        port map (
+            mem_addr => mem_addr_t,
+            mem_data_in => mem_data_in_t,
+            mem_data_init => mem_data_init_t,
+            mem_data_out => mem_data_out_t,
+            mem_read => mem_read_t,
+            mem_write => mem_write_t,
+            mem_clk => mem_clk_t,
+            rst => rst_t,
+            init => init_t
+        );
+
+    -- Clock generation process
+    clk_gen: process
+    begin
+        while true loop
+            mem_clk_t <= '0';
+            wait for 10 ns;
+            mem_clk_t <= '1';
+            wait for 10 ns;
+        end loop;
+    end process;
+
+    -- Stimulus process for testing the memory
+    stimulus: process
+    begin
+        -- Step 1: Reset the memory
+        rst_t <= '1';
+		  mem_data_in_t <= x"0000";
+		  mem_addr_t <= x"0000";
+		  mem_data_init_t <= x"0000";
+		  mem_read_t <= '0';
+		  mem_write_t <= '0';
+		  init_t <= '0';
+        wait for 20 ns;
+        rst_t <= '0';
+        wait for 20 ns;
+
+        -- Step 2: Initialize the memory
+        init_t <= '1';
+        mem_write_t <= '1';
+
+        -- Write 0001H to address 0003H
+        mem_addr_t <= x"0003";
+        mem_data_init_t <= x"0001";
+        wait for 20 ns;
+
+        -- Write 000FH to address 00FFH
+        mem_addr_t <= x"00FF";
+        mem_data_init_t <= x"000F";
+        wait for 20 ns;
+
+        -- Write F003H to address FFFFH
+        mem_addr_t <= x"FFFF";
+        mem_data_init_t <= x"F003";
+        wait for 20 ns;
+
+        -- Write FFFFH to address 0000H
+        mem_addr_t <= x"0000";
+        mem_data_init_t <= x"FFFF";
+        wait for 20 ns;
+
+        -- Step 3: Write data with init = 0
+        init_t <= '0';
+
+        -- Write 00FFH to address 00FFH
+        mem_addr_t <= x"00FF";
+        mem_data_in_t <= x"00FF";
+        wait for 20 ns;
+
+        -- Write 0F1EH to address FFFEH
+        mem_addr_t <= x"FFFE";
+        mem_data_in_t <= x"0F1E";
+        wait for 20 ns;
+
+        mem_write_t <= '0';
+
+        -- Step 4: Read back data
+        mem_read_t <= '1';
+
+        -- Read address 0000H
+        mem_addr_t <= x"0000";
+        wait for 20 ns;
+
+        -- Read address 0003H
+        mem_addr_t <= x"0003";
+        wait for 20 ns;
+
+        -- Read address 00FFH
+        mem_addr_t <= x"00FF";
+        wait for 20 ns;
+
+        -- Read address 0100H
+        mem_addr_t <= x"0100";
+        wait for 20 ns;
+
+        -- Read address FFFFH
+        mem_addr_t <= x"FFFF";
+        wait for 20 ns;
+
+        -- Read address FFFEH
+        mem_addr_t <= x"FFFE";
+        wait for 20 ns;
+
+        -- End simulation
+        mem_read_t <= '0';
+        wait;
+    end process;
+end bhv;

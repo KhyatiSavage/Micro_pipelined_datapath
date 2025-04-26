@@ -1,0 +1,36 @@
+library ieee;
+use ieee.std_logic_1164.all;
+library work;
+use work.Gates.all;
+use work.my_gates.all;
+use work.my_fulladder.all;
+
+entity n_bit_adder_subtractor is
+	port (
+		a, b : in std_logic_vector(3 downto 0);
+		m : in std_logic;
+		s : out std_logic_vector(3 downto 0);
+		c_out : out std_logic
+	);
+end entity n_bit_adder_subtractor;
+
+architecture struct of n_bit_adder_subtractor is 
+	signal x : std_logic_vector(3 downto 0);
+	signal c : std_logic_vector(3 downto 1);
+begin 
+	-- First FullAdder
+	inst1 : XOR_2 port map (A => m, B => b(0), Y => x(0));
+	inst2 : FullAdder port map (A => a(0), B => x(0), C_i => m, S => s(0), C_o => c(1));
+	
+	-- Second FullAdder
+	inst3 : XOR_2 port map (A => m, B => b(1), Y => x(1));
+	inst4 : FullAdder port map (A => a(1), B => x(1), C_i => c(1), S => s(1), C_o => c(2));
+	
+	-- Third FullAdder
+	inst5 : XOR_2 port map (A => m, B => b(2), Y => x(2));
+	inst6 : FullAdder port map (A => a(2), B => x(2), C_i => c(2), S => s(2), C_o => c(3));
+	
+	-- Fourth FullAdder
+	inst7 : XOR_2 port map (A => m, B => b(3), Y => x(3));
+	inst8 : FullAdder port map (A => a(3), B => x(3), C_i => c(3), S => s(3), C_o => c_out);
+end architecture struct;

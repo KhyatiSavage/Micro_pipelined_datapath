@@ -1,0 +1,43 @@
+library ieee;
+use ieee.std_logic_1164.all;
+library work;
+use work.Gates.all;
+use work.full_adder.all;
+
+entity multiplier is 
+    port (
+        a, b : in std_logic_vector(3 downto 0);
+        m : out std_logic_vector(6 downto 0)
+    );
+end entity multiplier;
+
+architecture struct of multiplier is 
+    signal S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23 : std_logic;
+begin
+    inst1 : AND_2 port map (A => a(0), B => b(0), Y => m(0));
+    
+    inst2 : AND_2 port map (A => a(1), B => b(0), Y => S1);
+    inst3 : AND_2 port map (A => a(0), B => b(1), Y => S2);
+    inst4 : HalfAdder port map (A => S1, B => S2, S => m(1), C => S3);
+    
+    inst5 : AND_2 port map (A => a(2), B => b(0), Y => S4);
+    inst6 : AND_2 port map (A => a(1), B => b(1), Y => S5);
+    inst7 : FullAdder port map (A => S4, B => S5, C_i => S3, S => S6, C_o => S7);
+    inst8 : AND_2 port map (A => a(0), B => b(2), Y => S8);
+    inst9 : HalfAdder port map (A => S6, B => S8, S => m(2), C => S9);
+    inst10 : HalfAdder port map (A => S7, B => S9, S => S20, C => S21);
+    
+    inst11 : AND_2 port map (A => a(3), B => b(0), Y => S10);
+    inst12 : AND_2 port map (A => a(2), B => b(1), Y => S11);
+    inst13 : FullAdder port map (A => S10, B => S11, C_i => S20, S => S12, C_o => S13);
+    inst14 : AND_2 port map (A => a(1), B => b(2), Y => S14);
+    inst15 : HalfAdder port map (A => S12, B => S14, S => m(3), C => S15);
+    inst16 : FullAdder port map (A => S15, B => S13, C_i => S21, S => S22, C_o => S23);
+    
+    inst17 : AND_2 port map (A => a(3), B => b(1), Y => S16);
+    inst18 : AND_2 port map (A => a(2), B => b(2), Y => S17);
+    inst19 : FullAdder port map (A => S16, B => S17, C_i => S22, S => m(4), C_o => S18);
+    
+    inst20 : AND_2 port map (A => a(3), B => b(2), Y => S19);
+    inst21 : FullAdder port map (A => S19, B => S18, C_i => S23, S => m(5), C_o => m(6));
+end architecture struct;

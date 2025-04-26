@@ -1,0 +1,18 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity D_flop is
+    Port (clk, rst, D : in  std_logic; Q : out std_logic);
+end D_flop;
+
+architecture Bhv of D_flop is
+begin
+    process (clk, rst)
+    begin
+        if rst = '1' then
+            Q <= '0';
+        elsif rising_edge(clk) then
+            Q <= D;
+        end if;
+    end process;
+end Bhv;

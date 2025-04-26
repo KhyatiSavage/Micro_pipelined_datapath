@@ -1,0 +1,125 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library work;
+use work.multiplier.all;
+use work.Adder_Subtractor.all;
+
+entity alu is
+    port (
+        a        : in  std_logic_vector(15 downto 0); 
+        b        : in  std_logic_vector(15 downto 0); 
+        alu_ctrl : in  std_logic_vector(2 downto 0);  -- Control signals 
+        result   : out std_logic_vector(15 downto 0) 
+		  overflow : out std_logic;
+    );
+end alu;
+
+architecture behavioral of alu is
+
+    function logic_and(x, y : std_logic_vector) return std_logic_vector is
+        variable res : std_logic_vector(x'range);
+    begin
+        for i in x'range loop
+            res(i) := x(i) and y(i);
+        end loop;
+        return res;
+    end function;
+
+    function logic_or(x, y : std_logic_vector) return std_logic_vector is
+        variable res : std_logic_vector(x'range);
+    begin
+        for i in x'range loop
+            res(i) := x(i) or y(i);
+        end loop;
+        return res;
+    end function;
+
+    function logic_imp(x, y : std_logic_vector) return std_logic_vector is
+        variable res : std_logic_vector(x'range);
+    begin
+        for i in x'range loop
+            res(i) := not x(i) or y(i);
+        end loop;
+        return res;
+    end function;
+
+    function shift(x : std_logic_vector) return std_logic_vector is
+        variable res : std_logic_vector(x'range);
+    begin
+        for i in 0 to x'length - 2 loop
+            res(i + 1) := x(i);
+        end loop;
+        res(0) := '0';  
+        return res;
+    end function;
+
+    component ripple_carry_adder_subtractor is
+        port (
+            a : in  std_logic_vector(15 downto 0);
+            b : in  std_logic_vector(15 downto 0);
+            m : in  std_logic;
+            s : out std_logic_vector(15 downto 0)
+        );
+    end component;
+
+    -- Signals to store intermediate results
+    signal temp_result : std_logic_vector(15 downto 0);
+    signal temp_mult    : std_logic_vector(7 downto 0);
+
+
+    component mux_8to1 is
+        port (
+            i  : in  std_logic_vector(127 downto 0);  
+            s  : in  std_logic_vector(2 downto 0);     
+            y  : out std_logic_vector(15 downto 0)     
+        );
+    end component;
+
+begin
+
+    process(a, b, alu_ctrl)
+        variable mux_input : std_logic_vector(127 downto 0);
+    begin
+        mux_input := (others => '0');
+
+        case alu_ctrl is
+            when "011" =>  -- multiply using multiplier (4-bit multiplication)
+                multiplier port map (a => a(3 downto 0), b => b(3 downto 0), m => temp_mult);
+                temp_result <= (others => '0');
+                temp_result(7 downto 0) <= temp_mult;
+            when "000" =>  -- add (use alu_ctrl(2) as the mode bit)
+                n_bit_adder_subtractor port map (a => a, b => b, m => alu_ctrl(2), s => temp_result, c_out => overflow);
+            when "010" =>  -- sub (use alu_ctrl(2) as the mode bit)
+                n_bit_adder_subtractor port map (a => a, b => b, m => alu_ctrl(2), s => temp_result, c_out => overflow);
+            when "100" =>  -- AND
+                temp_result <= logic_and(a, b);
+            when "101" =>  -- OR
+                temp_result <= logic_or(a, b);
+            when "110" =>  -- IMP 
+                temp_result <= logic_imp(a, b);
+            when "111" =>  -- Shift
+                temp_result <= shift(a);
+            when others => 
+                temp_result <= (others => '0');
+        end case;
+
+        mux_input(15 downto 0)  := temp_result;
+        mux_input(31 downto 16) := temp_result;
+        mux_input(47 downto 32) := temp_result;
+        mux_input(63 downto 48) := temp_result;
+        mux_input(79 downto 64) := temp_result;
+        mux_input(95 downto 80) := temp_result;
+        mux_input(111 downto 96):= temp_result;
+        mux_input(127 downto 112):= temp_result;
+
+        mux_8to1_inst : mux_8to1
+            port map (
+                i  => mux_input,
+                s  => alu_ctrl(2 downto 0),  
+                y  => result                
+            );
+
+    end process;
+
+end behavioral;
